@@ -1,0 +1,175 @@
+#Pair up a word and the amount of times it has appeared
+class wordCount():
+
+    #Initialize the class
+    def __init__(self, word):
+        self.word = word
+        self.count = 1
+    
+    #increase  the count of the word by one
+    def increaseCount(self):
+        self.count += 1
+
+
+class hashTable:
+
+    #Initialize a table with a size of 5
+    def __init__(self):
+        self.table =["emptySinceStart"] * 5
+        self.size = 5
+        self.items = 0
+        self.collisions = 0
+
+    #print the table
+    def print(self):
+        #If an empty has been printed and another will be printed, instead stack them
+        empty = 0
+        mult = 1
+        for item in self.table:
+            if type(item) == str:
+                if empty == 0:
+                    print("Empty", end = " ")
+                    empty = 1
+                else:
+                    mult += 1
+            else:
+                #Print the multiplier if necessary
+                if mult > 1:
+                    print ("x", mult)
+                    mult = 1
+                    empty = 0
+                elif empty == 1:
+                    print ("")
+                    empty = 0
+
+                print("{",item.word, ",", item.count, "}")
+
+        if mult > 1:
+                print ("x", mult)
+
+
+    #search for an word in the table
+    def search(self, word):
+        lookups = 1
+        #Find the location for where the word should be
+        location = self.hash(word)
+        while self.table[location] != "emptySinceStart":
+            if word == self.table[location].word:
+                return [location, lookups]
+            lookups += 1
+            location += 1
+            #Wrap around the table if necessary
+            if location >= self.size:
+                location = 0
+        return [False, lookups]
+
+    #Add an item to a hash table
+    def addItem(self, item):
+        word = item.word
+        location = self.hash(word)
+        #append the item to the bucket list where its key is located
+        tempCollisions = 0
+        while True:
+            if type(self.table[location]) == str:
+                
+                self.table[location] = (item)
+                self.items += 1
+                #If the capacity is over a certain limit, resize the table
+                if (self.items / self.size > .8) or (tempCollisions > (self.size/3)):  ####################################################################################################################
+                    self.hashResize()
+                self.collisions += tempCollisions
+                break
+            elif self.table[location].word == word:
+                self.table[location].increaseCount()
+                break
+            tempCollisions += 1
+            location += 1
+            #Wrap around the table if necessary
+            if location >= self.size:
+                location = 0
+
+
+    #Give an item a key depending on the word it is
+    def hash(self, item):
+        sum = 0
+        #Find the location of the item by adding the ASCII value of the letters in the word
+        #then modulate it by the size of the table
+        for character in item:
+            sum += ord(character) * (self.size + 2)
+            sum += 1
+        key = sum % self.size
+        return key
+    
+    #Resize the table once it meets a certain criteria
+    def hashResize(self):
+        #Reset the amount of collisions
+        self.collisions = 0
+        #Increase the size of the table
+        self.size = self.size * 2 + 1
+        #Put the data from the previous table into the new one
+        tempTable = self.table
+        self.table = ["emptySinceStart"] * self.size
+        for item in tempTable:
+            if item != "emptySinceStart":
+                self.addItem(item)
+
+#Takes in the list of words to be added
+def words_in(word_list, table):  #(num_buckets, collisions)
+    #Insert all words from word_list into your hash table.
+    for word in word_list:
+        item = wordCount(word.lower())
+        table.addItem(item)
+    #Return the size and the number of collisions in the table
+    return table.size, table.collisions
+    
+#Takes 
+def lookup_word_count(word, table):
+    pig = table.search(word.lower())
+    numWords = table.table[pig[0]].count
+    return numWords, pig[1]
+
+
+#Returns a list of all the words in the file
+def extractFile():
+    #List to put all of the words in
+    wordList = []
+    yes = "qwertyuiopasdfghjklzxcvbnm" 
+    tempString = ""
+    inFile = open("Alice.txt") ##################################################################################
+    #Read a line from the file
+    for line in inFile:
+        #Read all characters individually
+        for char in line:  
+            char = char.lower()
+            #separate the words out
+            if char in yes:
+                tempString += char
+            elif (char == " " or char == "\n") and tempString != "":
+                wordList.append(tempString)
+                tempString = ""
+            
+    inFile.close()
+    return wordList
+
+                
+                
+def main():
+    word = "The"
+    #words = ["the", "I", "the", "banana", "teh", "retcon"]   
+    words = extractFile()
+    wordTable = hashTable() 
+    numSize, numCollisions = words_in(words, wordTable)
+    numWords, numLookup = lookup_word_count(word, wordTable)
+    wordTable.print()
+    uniqueWords = set(words)
+    total_lookups = 0
+    for word in uniqueWords:
+        _, lookups = lookup_word_count(word, wordTable)
+        total_lookups += lookups
+
+    print(numSize, numCollisions, numWords, total_lookups)
+
+
+
+if __name__ == "__main__":
+    main()
