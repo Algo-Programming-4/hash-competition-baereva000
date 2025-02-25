@@ -80,7 +80,7 @@ class hashTable:
                 self.items += 1
                 self.collisions += tempCollisions
                 #If the capacity is over a certain limit, resize the table
-                if (self.items / self.size > .8) or (self.collisions > self.size//5):  ####################################################################################################################
+                if (self.items / self.size > .8) or (self.collisions > self.size//4):  ####################################################################################################################
                     self.hashResize()
                 break
             elif self.table[location].word == word:
